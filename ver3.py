@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 import os
-import json
+import json 
 from collections import deque
 import time
 from sklearn.linear_model import LinearRegression
@@ -1432,4 +1432,5 @@ if __name__ == '__main__':
         print("   AI will use enhanced sample data when needed.")
     
     print("🎯 Starting AI Flask server...")
+
     app.run(debug=True, host='0.0.0.0', port=5000)
