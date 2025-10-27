@@ -3,7 +3,7 @@ import requests
 import pandas as pd
 import numpy as np 
 from datetime import datetime, timedelta
-import os
+import os 
 import json
 from collections import deque
 import time
@@ -1152,3 +1152,4 @@ if __name__ == '__main__':
     print("🎯 Starting beginner-friendly Flask server...")
 
     app.run(debug=True, host='0.0.0.0', port=5000)
+
