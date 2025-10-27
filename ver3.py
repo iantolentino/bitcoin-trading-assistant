@@ -8,7 +8,7 @@ import json
 from collections import deque
 import time
 from sklearn.linear_model import LinearRegression
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier 
 from sklearn.preprocessing import StandardScaler
 import warnings
 warnings.filterwarnings('ignore')
@@ -1434,3 +1434,4 @@ if __name__ == '__main__':
     print("🎯 Starting AI Flask server...")
 
     app.run(debug=True, host='0.0.0.0', port=5000)
+
