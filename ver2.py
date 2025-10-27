@@ -1,7 +1,7 @@
 from flask import Flask, render_template_string, request, jsonify
 import requests
 import pandas as pd
-import numpy as np
+import numpy as np 
 from datetime import datetime, timedelta
 import os
 import json
@@ -1150,4 +1150,5 @@ if __name__ == '__main__':
         print("   Application will use enhanced sample data.")
     
     print("🎯 Starting beginner-friendly Flask server...")
+
     app.run(debug=True, host='0.0.0.0', port=5000)
