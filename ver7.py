@@ -30,21 +30,16 @@ class BitcoinPredictor:
         # Trading levels
         self.support_levels = []
         self.resistance_levels = []
-        self.buy_target = 0
-        self.sell_target = 0
+        self.entry_price = 0
+        self.take_profit = 0
         self.stop_loss = 0
+        self.risk_reward_ratio = 0
         
         # Prediction parameters
         self.sma_short = 10
         self.sma_long = 30
         self.ema_short = 12
         self.ema_long = 26
-        self.macd_line = 0
-        self.signal_line = 0
-        self.macd_histogram = 0
-        self.bollinger_upper = 0
-        self.bollinger_lower = 0
-        self.bollinger_middle = 0
         
         self.setup_ui()
         self.running = True
@@ -83,7 +78,7 @@ class BitcoinPredictor:
         self.change_label.pack()
         
         # Trading signals frame
-        signals_frame = ttk.LabelFrame(main_frame, text="Trading Signals & Targets", padding="10")
+        signals_frame = ttk.LabelFrame(main_frame, text="Trading Strategy & Position Management", padding="10")
         signals_frame.pack(fill=tk.X, pady=5)
         
         # Create grid for trading signals
@@ -102,56 +97,78 @@ class BitcoinPredictor:
                                      wraplength=400, justify=tk.LEFT)
         self.reason_label.pack(anchor="w", pady=5)
         
-        # Right column - Price targets
+        # Right column - Trading plan
         right_column = ttk.Frame(signals_grid)
         right_column.pack(side=tk.RIGHT, fill=tk.X, expand=True)
         
-        self.buy_target_label = ttk.Label(right_column, text="Buy Target: Calculating...", 
-                                         font=("Arial", 10), foreground="green")
-        self.buy_target_label.pack(anchor="w")
+        self.entry_label = ttk.Label(right_column, text="Suggested Entry: Calculating...", 
+                                    font=("Arial", 10, "bold"), foreground="blue")
+        self.entry_label.pack(anchor="w")
         
-        self.sell_target_label = ttk.Label(right_column, text="Sell Target: Calculating...", 
-                                          font=("Arial", 10), foreground="red")
-        self.sell_target_label.pack(anchor="w")
+        self.take_profit_label = ttk.Label(right_column, text="Take Profit: Calculating...", 
+                                          font=("Arial", 10, "bold"), foreground="green")
+        self.take_profit_label.pack(anchor="w")
         
         self.stop_loss_label = ttk.Label(right_column, text="Stop Loss: Calculating...", 
-                                        font=("Arial", 10), foreground="orange")
+                                        font=("Arial", 10, "bold"), foreground="red")
         self.stop_loss_label.pack(anchor="w")
         
+        self.rr_label = ttk.Label(right_column, text="Risk/Reward: Calculating...", 
+                                 font=("Arial", 10), foreground="purple")
+        self.rr_label.pack(anchor="w")
+        
+        # Position sizing frame
+        position_frame = ttk.LabelFrame(main_frame, text="Position Sizing Calculator", padding="10")
+        position_frame.pack(fill=tk.X, pady=5)
+        
+        position_grid = ttk.Frame(position_frame)
+        position_grid.pack(fill=tk.X)
+        
+        # Account size input
+        ttk.Label(position_grid, text="Account Size ($):", font=("Arial", 9)).pack(side=tk.LEFT, padx=(0, 5))
+        self.account_size_var = tk.StringVar(value="1000")
+        account_entry = ttk.Entry(position_grid, textvariable=self.account_size_var, width=10)
+        account_entry.pack(side=tk.LEFT, padx=(0, 10))
+        
+        # Risk per trade input
+        ttk.Label(position_grid, text="Risk per Trade (%):", font=("Arial", 9)).pack(side=tk.LEFT, padx=(0, 5))
+        self.risk_per_trade_var = tk.StringVar(value="2")
+        risk_entry = ttk.Entry(position_grid, textvariable=self.risk_per_trade_var, width=5)
+        risk_entry.pack(side=tk.LEFT, padx=(0, 10))
+        
+        # Calculate button
+        ttk.Button(position_grid, text="Calculate Position", 
+                  command=self.calculate_position_size).pack(side=tk.LEFT, padx=(0, 10))
+        
+        self.position_size_label = ttk.Label(position_grid, text="Position Size: --", font=("Arial", 9, "bold"))
+        self.position_size_label.pack(side=tk.LEFT)
+        
         # Price predictions frame
-        predictions_frame = ttk.LabelFrame(main_frame, text="Short-Term Price Predictions", padding="10")
+        predictions_frame = ttk.LabelFrame(main_frame, text="Price Projections", padding="10")
         predictions_frame.pack(fill=tk.X, pady=5)
         
         predictions_grid = ttk.Frame(predictions_frame)
         predictions_grid.pack(fill=tk.X)
         
         # Prediction columns
-        pred_5min = ttk.Frame(predictions_grid)
-        pred_5min.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
-        ttk.Label(pred_5min, text="5 Min Prediction", font=("Arial", 10, "bold")).pack()
-        self.pred_5min_label = ttk.Label(pred_5min, text="Calculating...", font=("Arial", 11))
-        self.pred_5min_label.pack()
+        time_frames = [
+            ("5 Min", "pred_5min_label"),
+            ("15 Min", "pred_15min_label"), 
+            ("1 Hour", "pred_1hr_label"),
+            ("4 Hour", "pred_4hr_label"),
+            ("Today's Target", "pred_today_label")
+        ]
         
-        pred_15min = ttk.Frame(predictions_grid)
-        pred_15min.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
-        ttk.Label(pred_15min, text="15 Min Prediction", font=("Arial", 10, "bold")).pack()
-        self.pred_15min_label = ttk.Label(pred_15min, text="Calculating...", font=("Arial", 11))
-        self.pred_15min_label.pack()
-        
-        pred_1hr = ttk.Frame(predictions_grid)
-        pred_1hr.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
-        ttk.Label(pred_1hr, text="1 Hour Prediction", font=("Arial", 10, "bold")).pack()
-        self.pred_1hr_label = ttk.Label(pred_1hr, text="Calculating...", font=("Arial", 11))
-        self.pred_1hr_label.pack()
-        
-        pred_4hr = ttk.Frame(predictions_grid)
-        pred_4hr.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
-        ttk.Label(pred_4hr, text="4 Hour Prediction", font=("Arial", 10, "bold")).pack()
-        self.pred_4hr_label = ttk.Label(pred_4hr, text="Calculating...", font=("Arial", 11))
-        self.pred_4hr_label.pack()
+        for text, attr_name in time_frames:
+            frame = ttk.Frame(predictions_grid)
+            frame.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
+            ttk.Label(frame, text=text, font=("Arial", 10, "bold")).pack()
+            label = ttk.Label(frame, text="Calculating...", font=("Arial", 9))
+            label.pack()
+            setattr(self, attr_name, label)
         
         # Technical indicators frame
-        tech_frame = ttk.LabelFrame(main_frame, text="Advanced Technical Indicators", padding="10")
+        tech_frame = ttk.LabelFrame(main_frame, text="Technical Indicators", padding="10")
         tech_frame.pack(fill=tk.X, pady=5)
         
         # Create grid for indicators
@@ -183,7 +200,7 @@ class BitcoinPredictor:
         self.volume_label.pack(anchor="w")
         
         # Support & Resistance frame
-        levels_frame = ttk.LabelFrame(main_frame, text="Support & Resistance Levels", padding="10")
+        levels_frame = ttk.LabelFrame(main_frame, text="Key Levels", padding="10")
         levels_frame.pack(fill=tk.X, pady=5)
         
         levels_grid = ttk.Frame(levels_frame)
@@ -202,7 +219,7 @@ class BitcoinPredictor:
         self.resistance_label.pack(anchor="w")
         
         # Price history frame
-        history_frame = ttk.LabelFrame(main_frame, text="Recent Price History", padding="10")
+        history_frame = ttk.LabelFrame(main_frame, text="Price History & Trades", padding="10")
         history_frame.pack(fill=tk.BOTH, expand=True, pady=5)
         
         # Create text widget for price history
@@ -220,12 +237,36 @@ class BitcoinPredictor:
         
         # Disclaimer
         disclaimer_label = ttk.Label(main_frame, 
-                                   text="⚠️ Disclaimer: This is for educational purposes only. Do your own research before trading.",
+                                   text="⚠️ For educational purposes. Always use proper risk management.",
                                    font=("Arial", 8), foreground="red")
         disclaimer_label.pack(pady=5)
+        
+        # Bind account size changes
+        self.account_size_var.trace('w', self.calculate_position_size)
+        self.risk_per_trade_var.trace('w', self.calculate_position_size)
+    
+    def calculate_position_size(self, *args):
+        """Calculate position size based on account size and risk"""
+        try:
+            account_size = float(self.account_size_var.get())
+            risk_percent = float(self.risk_per_trade_var.get()) / 100
+            
+            if self.entry_price > 0 and self.stop_loss > 0:
+                risk_per_trade = account_size * risk_percent
+                price_risk = abs(self.entry_price - self.stop_loss)
+                
+                if price_risk > 0:
+                    position_size = risk_per_trade / price_risk
+                    position_value = position_size * self.entry_price
+                    
+                    self.position_size_label.config(
+                        text=f"Position: {position_size:.4f} BTC (${position_value:.2f})"
+                    )
+        except:
+            self.position_size_label.config(text="Position Size: Enter valid numbers")
     
     def fetch_bitcoin_data(self):
-        """Fetch Bitcoin data using urllib (no external packages needed)"""
+        """Fetch Bitcoin data using urllib"""
         sources = [
             self.get_binance_data,
             self.get_coingecko_data,
@@ -238,13 +279,12 @@ class BitcoinPredictor:
                 price = source()
                 if price and price > 0:
                     prices.append(price)
-                    if len(prices) >= 2:  # We need at least 2 sources
+                    if len(prices) >= 2:
                         break
             except Exception as e:
                 continue
         
         if prices:
-            # Simulate volume data (since free APIs don't always provide volume)
             self.volume = random.uniform(1000000000, 5000000000)
             return sum(prices) / len(prices)
         return None
@@ -303,7 +343,7 @@ class BitcoinPredictor:
         return ema
     
     def calculate_macd(self):
-        """Calculate MACD (Moving Average Convergence Divergence)"""
+        """Calculate MACD"""
         ema_12 = self.calculate_ema(12)
         ema_26 = self.calculate_ema(26)
         
@@ -311,14 +351,7 @@ class BitcoinPredictor:
             return None, None, None
         
         macd_line = ema_12 - ema_26
-        
-        # For signal line (EMA of MACD line), we need more history
-        if len(self.price_history) >= 26 + 9:  # 26 for EMA, 9 for signal
-            # Simplified signal line calculation
-            signal_line = macd_line * 0.9  # Approximation
-        else:
-            signal_line = macd_line
-        
+        signal_line = macd_line * 0.9  # Approximation
         histogram = macd_line - signal_line
         
         return macd_line, signal_line, histogram
@@ -402,57 +435,75 @@ class BitcoinPredictor:
     def predict_future_prices(self):
         """Predict future prices using trend analysis"""
         if len(self.price_history) < 10:
-            return None, None, None, None
+            return None, None, None, None, None
         
         prices = list(self.price_history)
         current_price = prices[-1]
         
-        # Calculate short-term trend
-        recent_trend = 0
-        if len(prices) >= 5:
-            short_trend = (prices[-1] - prices[-5]) / prices[-5] * 100
-        else:
-            short_trend = 0
-        
-        # Calculate medium-term trend
-        if len(prices) >= 15:
-            medium_trend = (prices[-1] - prices[-15]) / prices[-15] * 100
-        else:
-            medium_trend = short_trend
+        # Calculate trends
+        short_trend = (prices[-1] - prices[-5]) / prices[-5] * 100 if len(prices) >= 5 else 0
+        medium_trend = (prices[-1] - prices[-15]) / prices[-15] * 100 if len(prices) >= 15 else short_trend
         
         # Calculate volatility
-        if len(prices) >= 10:
-            volatility = max(prices[-10:]) - min(prices[-10:])
-            volatility_pct = volatility / current_price * 100
-        else:
-            volatility_pct = 2.0  # Default volatility
+        volatility = max(prices[-10:]) - min(prices[-10:]) if len(prices) >= 10 else current_price * 0.02
+        volatility_pct = volatility / current_price * 100
         
-        # Predict future prices based on trends and volatility
-        pred_5min = current_price * (1 + short_trend/100 * 0.1) * (1 + random.uniform(-volatility_pct/100, volatility_pct/100) * 0.5)
-        pred_15min = current_price * (1 + short_trend/100 * 0.3) * (1 + random.uniform(-volatility_pct/100, volatility_pct/100) * 0.8)
-        pred_1hr = current_price * (1 + medium_trend/100 * 0.8) * (1 + random.uniform(-volatility_pct/100, volatility_pct/100) * 1.2)
-        pred_4hr = current_price * (1 + medium_trend/100 * 1.5) * (1 + random.uniform(-volatility_pct/100, volatility_pct/100) * 2.0)
+        # Predict future prices
+        pred_5min = current_price * (1 + short_trend/100 * 0.1)
+        pred_15min = current_price * (1 + short_trend/100 * 0.3)
+        pred_1hr = current_price * (1 + medium_trend/100 * 0.8)
+        pred_4hr = current_price * (1 + medium_trend/100 * 1.5)
         
-        return pred_5min, pred_15min, pred_1hr, pred_4hr
+        # Today's target (more aggressive)
+        today_target = current_price * (1 + medium_trend/100 * 2.0)
+        
+        return pred_5min, pred_15min, pred_1hr, pred_4hr, today_target
     
-    def calculate_trading_targets(self):
-        """Calculate buy/sell targets and stop loss"""
+    def calculate_trading_plan(self, recommendation):
+        """Calculate practical trading plan with entry, take profit, and stop loss"""
         if len(self.price_history) < 10:
-            return 0, 0, 0
+            return 0, 0, 0, 0
         
         current_price = self.current_price
-        atr = current_price * 0.02  # Average True Range approximation (2%)
+        support_levels, resistance_levels = self.calculate_support_resistance()
         
-        # Buy target (take profit)
-        buy_target = current_price * 1.03  # 3% profit target
+        if recommendation in ["BUY", "STRONG BUY"]:
+            # For LONG positions
+            entry_price = current_price
+            if resistance_levels:
+                take_profit = min(resistance_levels)  # Nearest resistance
+            else:
+                take_profit = current_price * 1.03  # 3% profit target
+            
+            if support_levels:
+                stop_loss = max(support_levels)  # Nearest support
+            else:
+                stop_loss = current_price * 0.98  # 2% stop loss
+            
+        elif recommendation in ["SELL", "STRONG SELL"]:
+            # For SHORT positions  
+            entry_price = current_price
+            if support_levels:
+                take_profit = max(support_levels)  # Nearest support for shorts
+            else:
+                take_profit = current_price * 0.97  # 3% profit target for shorts
+            
+            if resistance_levels:
+                stop_loss = min(resistance_levels)  # Nearest resistance for shorts
+            else:
+                stop_loss = current_price * 1.02  # 2% stop loss for shorts
+        else:
+            # HOLD - no clear direction
+            entry_price = current_price
+            take_profit = current_price * 1.02
+            stop_loss = current_price * 0.98
         
-        # Sell target (take profit for short positions)
-        sell_target = current_price * 0.97  # 3% profit target for shorts
+        # Calculate risk/reward ratio
+        potential_profit = abs(take_profit - entry_price)
+        potential_loss = abs(entry_price - stop_loss)
+        risk_reward = potential_profit / potential_loss if potential_loss > 0 else 0
         
-        # Stop loss
-        stop_loss = current_price * 0.98  # 2% stop loss
-        
-        return buy_target, sell_target, stop_loss
+        return entry_price, take_profit, stop_loss, risk_reward
     
     def analyze_trend(self):
         """Analyze market trend and provide recommendation"""
@@ -567,19 +618,19 @@ class BitcoinPredictor:
                     foreground=change_color
                 )
             
-            # Update prediction and indicators
+            # Update prediction and trading plan
             recommendation, reason, color = self.analyze_trend()
             self.prediction_label.config(text=f"Recommendation: {recommendation}", foreground=color)
             self.reason_label.config(text=reason)
+            
+            # Update trading plan
+            self.update_trading_plan(recommendation)
             
             # Update technical indicators
             self.update_technical_indicators()
             
             # Update price predictions
             self.update_price_predictions()
-            
-            # Update trading targets
-            self.update_trading_targets()
             
             # Update support and resistance
             self.update_support_resistance()
@@ -588,10 +639,33 @@ class BitcoinPredictor:
             self.update_history_display()
             
             # Update status
-            self.status_var.set(f"Last update: {datetime.now().strftime('%H:%M:%S')} | Prices from: Binance, CoinGecko, CryptoCompare")
+            self.status_var.set(f"Last update: {datetime.now().strftime('%H:%M:%S')} | Live BTC Price")
             
         except Exception as e:
             self.status_var.set(f"Error updating display: {str(e)}")
+    
+    def update_trading_plan(self, recommendation):
+        """Update trading plan with entry, take profit, and stop loss"""
+        self.entry_price, self.take_profit, self.stop_loss, self.risk_reward_ratio = self.calculate_trading_plan(recommendation)
+        
+        if self.entry_price > 0:
+            # Update labels
+            self.entry_label.config(text=f"Entry: ${self.entry_price:,.2f}")
+            
+            # Calculate percentages
+            tp_percent = ((self.take_profit - self.entry_price) / self.entry_price) * 100
+            sl_percent = ((self.stop_loss - self.entry_price) / self.entry_price) * 100
+            
+            self.take_profit_label.config(
+                text=f"Take Profit: ${self.take_profit:,.2f} ({tp_percent:+.1f}%)"
+            )
+            self.stop_loss_label.config(
+                text=f"Stop Loss: ${self.stop_loss:,.2f} ({sl_percent:+.1f}%)"
+            )
+            self.rr_label.config(text=f"Risk/Reward: 1:{self.risk_reward_ratio:.2f}")
+            
+            # Update position size
+            self.calculate_position_size()
     
     def update_technical_indicators(self):
         """Update technical indicators display"""
@@ -628,7 +702,7 @@ class BitcoinPredictor:
     
     def update_price_predictions(self):
         """Update price predictions display"""
-        pred_5min, pred_15min, pred_1hr, pred_4hr = self.predict_future_prices()
+        pred_5min, pred_15min, pred_1hr, pred_4hr, today_target = self.predict_future_prices()
         
         if pred_5min:
             change_5min = (pred_5min - self.current_price) / self.current_price * 100
@@ -661,19 +735,14 @@ class BitcoinPredictor:
                 text=f"${pred_4hr:,.0f}\n({change_4hr:+.1f}%)", 
                 foreground=color_4hr
             )
-    
-    def update_trading_targets(self):
-        """Update trading targets display"""
-        buy_target, sell_target, stop_loss = self.calculate_trading_targets()
         
-        if buy_target:
-            self.buy_target_label.config(text=f"Buy Target: ${buy_target:,.0f} (+{((buy_target - self.current_price) / self.current_price * 100):.1f}%)")
-        
-        if sell_target:
-            self.sell_target_label.config(text=f"Sell Target: ${sell_target:,.0f} ({((sell_target - self.current_price) / self.current_price * 100):.1f}%)")
-        
-        if stop_loss:
-            self.stop_loss_label.config(text=f"Stop Loss: ${stop_loss:,.0f} ({((stop_loss - self.current_price) / self.current_price * 100):.1f}%)")
+        if today_target:
+            change_today = (today_target - self.current_price) / self.current_price * 100
+            color_today = "green" if change_today > 0 else "red"
+            self.pred_today_label.config(
+                text=f"${today_target:,.0f}\n({change_today:+.1f}%)", 
+                foreground=color_today
+            )
     
     def update_support_resistance(self):
         """Update support and resistance levels display"""
@@ -692,30 +761,28 @@ class BitcoinPredictor:
         self.history_text.delete(1.0, tk.END)
         
         if len(self.price_history) > 0:
-            self.history_text.insert(tk.END, "Time                 Price        Change      Volume\n")
+            self.history_text.insert(tk.END, "Time                 Price        Change      Signal\n")
             self.history_text.insert(tk.END, "-" * 60 + "\n")
             
-            # Show last 15 prices in reverse order (newest first)
+            # Show last 15 prices
             prices = list(self.price_history)
             
             for i in range(min(15, len(prices))):
-                idx = len(prices) - 1 - i  # Reverse index
+                idx = len(prices) - 1 - i
                 price = prices[idx]
                 time_str = datetime.now().strftime("%H:%M:%S")
                 
-                # Calculate change from previous price
+                # Calculate change
                 if idx > 0:
                     change = price - prices[idx-1]
                     change_pct = (change / prices[idx-1]) * 100
                     change_str = f"{change:+.2f} ({change_pct:+.2f}%)"
+                    signal = "BUY" if change > 0 else "SELL" if change < 0 else "HOLD"
                 else:
                     change_str = "N/A"
+                    signal = "HOLD"
                 
-                # Simulate volume
-                volume = random.uniform(1000000000, 5000000000)
-                volume_str = f"${volume/1000000:.1f}M"
-                
-                self.history_text.insert(tk.END, f"{time_str}    ${price:8.2f}    {change_str:>15}    {volume_str:>10}\n")
+                self.history_text.insert(tk.END, f"{time_str}    ${price:8.2f}    {change_str:>15}    {signal:>8}\n")
     
     def data_loop(self):
         """Main data fetching loop"""
@@ -740,7 +807,7 @@ class BitcoinPredictor:
                     self.volume_history.append(self.volume)
                     
                     previous_price = new_price
-                    error_count = 0  # Reset error count on success
+                    error_count = 0
                     
                     # Update UI in main thread
                     self.root.after(0, self.update_display)
@@ -749,13 +816,13 @@ class BitcoinPredictor:
                     if error_count > 5:
                         self.status_var.set("Error: Unable to fetch Bitcoin prices. Check internet connection.")
                 
-                # Wait 3 seconds before next update (slower to avoid rate limits)
+                # Wait 3 seconds before next update
                 time.sleep(3)
                 
             except Exception as e:
                 error_count += 1
                 print(f"Error in data loop: {e}")
-                time.sleep(5)  # Wait longer if there's an error
+                time.sleep(5)
     
     def start_data_fetching(self):
         """Start the data fetching in a separate thread"""
