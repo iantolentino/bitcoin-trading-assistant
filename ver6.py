@@ -27,7 +27,7 @@ class BitcoinPredictor:
         self.change_percentage = 0
         self.volume = 0
         
-        # Trading levels
+        # Trading level
         self.support_levels = []
         self.resistance_levels = []
         self.buy_target = 0
@@ -781,3 +781,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
