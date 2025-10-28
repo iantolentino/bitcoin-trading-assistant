@@ -752,7 +752,7 @@ class BitcoinPredictor:
                 # Wait 3 seconds before next update (slower to avoid rate limits)
                 time.sleep(3)
                 
-            except Exception as e: 
+            except Exception as e:
                 error_count += 1
                 print(f"Error in data loop: {e}")
                 time.sleep(5)  # Wait longer if there's an error
