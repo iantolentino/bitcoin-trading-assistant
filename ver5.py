@@ -6,7 +6,7 @@ import json
 from datetime import datetime
 from collections import deque
 import urllib.request
-import urllib.error
+import urllib.error 
 
 class BitcoinPredictor:
     def __init__(self, root):
@@ -394,4 +394,5 @@ def main():
         app.on_closing()
 
 if __name__ == "__main__":
+
     main()
