@@ -57,7 +57,7 @@ class BitcoinPredictor:
         self.root.geometry(f"{width}x{height}+{x}+{y}")
     
     def setup_ui(self):
-        # Main frame
+        # Main frame/window
         main_frame = ttk.Frame(self.root, padding="10")
         main_frame.pack(fill=tk.BOTH, expand=True)
         
@@ -848,3 +848,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
