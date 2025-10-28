@@ -23,7 +23,7 @@ class BitcoinPredictor:
         self.price_change = 0
         self.change_percentage = 0
         
-        # Prediction parameters
+        # Prediction parameters (adjustable)
         self.sma_short = 10
         self.sma_long = 20
         
@@ -396,5 +396,6 @@ def main():
 if __name__ == "__main__":
 
     main()
+
 
 
